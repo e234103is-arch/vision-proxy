@@ -1,20 +1,15 @@
 export default async function handler(req, res) {
-
-  // ★ここに書く
-  console.log(
-    "API KEY exists:",
-    !!process.env.GOOGLE_VISION_API_KEY
-  );
-
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   const { image } = req.body;
-
   if (!image) {
     return res.status(400).json({ error: "No image" });
   }
+
+  // 環境変数確認（ログで見える）
+  console.log("API KEY exists:", !!process.env.GOOGLE_VISION_API_KEY);
 
   const apiKey = process.env.GOOGLE_VISION_API_KEY;
 
@@ -36,14 +31,10 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
-
-    const text =
-      data.responses?.[0]?.fullTextAnnotation?.text || "";
-
-    return res.status(200).json({ text });
+    return res.status(200).json(data);
 
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Vision API Error" });
+    return res.status(500).json({ error: "Vision API error" });
   }
 }

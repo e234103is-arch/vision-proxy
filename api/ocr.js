@@ -1,10 +1,13 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    res.status(405).end();
-    return;
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   const { image } = req.body;
+
+  if (!image) {
+    return res.status(400).json({ error: "No image" });
+  }
 
   const apiKey = process.env.GOOGLE_VISION_API_KEY;
 
@@ -25,5 +28,5 @@ export default async function handler(req, res) {
   );
 
   const data = await response.json();
-  res.status(200).json(data);
+  return res.status(200).json(data);
 }

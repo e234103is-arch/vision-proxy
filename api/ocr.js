@@ -1,4 +1,14 @@
 export default async function handler(req, res) {
+  // ===== CORS =====
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Safari 対策（最重要）
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
@@ -8,10 +18,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "No image" });
   }
 
-  // 環境変数確認（ログで見える）
-  console.log("API KEY exists:", !!process.env.GOOGLE_VISION_API_KEY);
+  // ★ 環境変数名を統一
+  const apiKey = process.env.GOOGLE_API_KEY;
 
-  const apiKey = process.env.GOOGLE_VISION_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: "API key not set" });
+  }
 
   try {
     const response = await fetch(

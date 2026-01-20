@@ -11,22 +11,40 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.GOOGLE_VISION_API_KEY;
 
-  const response = await fetch(
-    `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        requests: [
-          {
-            image: { content: image },
-            features: [{ type: "TEXT_DETECTION" }]
-          }
-        ]
-      })
-    }
-  );
+  try {
+    const response = await fetch(
+      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requests: [
+            {
+              image: { content: image },
+              features: [{ type: "TEXT_DETECTION" }]
+            }
+          ]
+        })
+      }
+    );
 
-  const data = await response.json();
-  return res.status(200).json(data);
+    const data = await response.json();
+
+    // ★ ここが超重要
+    const text =
+      data.responses &&
+      data.responses[0] &&
+      data.responses[0].fullTextAnnotation &&
+      data.responses[0].fullTextAnnotation.text;
+
+    if (!text) {
+      return res.status(200).json({ text: "" });
+    }
+
+    return res.status(200).json({ text });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Vision API Error" });
+  }
 }

@@ -1,4 +1,11 @@
 export default async function handler(req, res) {
+
+  // ★ここに書く
+  console.log(
+    "API KEY exists:",
+    !!process.env.GOOGLE_VISION_API_KEY
+  );
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
@@ -30,16 +37,8 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // ★ ここが超重要
     const text =
-      data.responses &&
-      data.responses[0] &&
-      data.responses[0].fullTextAnnotation &&
-      data.responses[0].fullTextAnnotation.text;
-
-    if (!text) {
-      return res.status(200).json({ text: "" });
-    }
+      data.responses?.[0]?.fullTextAnnotation?.text || "";
 
     return res.status(200).json({ text });
 

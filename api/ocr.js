@@ -21,27 +21,22 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "API key not set" });
   }
 
-  try {
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { content: image },
-              features: [{ type: "TEXT_DETECTION" }]
-            }
-          ]
-        })
-      }
-    );
+  const response = await fetch(
+    `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { content: image },
+            features: [{ type: "TEXT_DETECTION" }]
+          }
+        ]
+      })
+    }
+  );
 
-    const raw = await response.text();
-    return res.status(response.status).send(raw);
-
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+  const data = await response.json();
+  return res.status(response.status).json(data);
 }

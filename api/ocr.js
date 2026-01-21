@@ -1,4 +1,5 @@
 export default async function handler(req, res) {
+  // ===== CORS =====
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -17,26 +18,46 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.GOOGLE_API_KEY;
+  console.log("API KEY exists:", !!apiKey);
+
   if (!apiKey) {
     return res.status(500).json({ error: "API key not set" });
   }
 
-  const response = await fetch(
-    `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        requests: [
-          {
-            image: { content: image },
-            features: [{ type: "TEXT_DETECTION" }]
-          }
-        ]
-      })
-    }
-  );
+  try {
+    const response = await fetch(
+      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requests: [
+            {
+              image: { content: image },
+              features: [{ type: "TEXT_DETECTION" }]
+            }
+          ]
+        })
+      }
+    );
 
-  const data = await response.json();
-  return res.status(response.status).json(data);
+    const text = await response.text();
+    console.log("Google status:", response.status);
+    console.log("Google raw response:", text);
+
+    if (!response.ok) {
+      // Google からのエラーをそのまま返す
+      return res.status(response.status).json({
+        error: "Google Vision API error",
+        detail: text
+      });
+    }
+
+    const data = JSON.parse(text);
+    return res.status(200).json(data);
+
+  } catch (err) {
+    console.error("Fetch failed:", err);
+    return res.status(500).json({ error: "Server fetch failed" });
+  }
 }
